@@ -158,12 +158,8 @@ using (id = (select auth.uid())) with check (id = (select auth.uid()) and role =
 
 drop policy if exists "Drivers read own driver record" on public.drivers;
 create policy "Drivers read own driver record" on public.drivers for select to authenticated using (id = (select auth.uid()));
-drop policy if exists "Drivers update own non-approval fields" on public.drivers;
-create policy "Drivers update own non-approval fields" on public.drivers for update to authenticated
-using (id = (select auth.uid())) with check (
-  id = (select auth.uid()) and
-  approval_status = (select d.approval_status from public.drivers d where d.id = (select auth.uid()))
-);
+-- Driver profile writes are restricted for now. A trusted registration/review
+-- workflow must create and approve driver records; clients cannot self-approve.
 
 drop policy if exists "Customers manage own addresses" on public.addresses;
 create policy "Customers manage own addresses" on public.addresses for all to authenticated
