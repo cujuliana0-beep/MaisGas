@@ -49,6 +49,11 @@ create table if not exists public.zones (
   unique (province, name)
 );
 
+-- Existing projects may already have catalogue tables without this flag.
+-- Add it explicitly because CREATE TABLE IF NOT EXISTS does not alter existing tables.
+alter table public.products add column if not exists active boolean not null default true;
+alter table public.zones add column if not exists active boolean not null default true;
+
 create table if not exists public.drivers (
   id uuid primary key references public.profiles(id) on delete cascade,
   rating numeric(3,2) not null default 5 check (rating between 0 and 5),
