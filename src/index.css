@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+ :root { --primary:22 100% 54%; --ember:22 100% 43%; --ink:24 14% 7%; --paper:0 0% 100%; --cream:28 100% 97%; --muted:24 8% 39%; --line:27 25% 89%; --success:148 68% 37%; --warning:40 100% 48%; --danger:4 75% 49%; }
+ * { border-color:hsl(var(--line)); }
+ body { @apply bg-cream text-ink font-sans antialiased; margin:0; font-size:16px; }
+ h1,h2,h3,h4 { @apply font-heading; }
+ button,a,input,select,textarea { -webkit-tap-highlight-color:transparent; }
+ button,a { touch-action:manipulation; }
+ button:disabled { @apply opacity-40 cursor-not-allowed; }
+ :focus-visible { outline:3px solid hsl(var(--ink)); outline-offset:4px; }
+ input,select,textarea { @apply rounded-xl border bg-paper px-4 py-3 w-full min-h-12 text-base; }
+ label { @apply block text-sm font-semibold mb-2; }
+ textarea { resize:vertical; }
+ ::selection { background:hsl(var(--primary) / .25); }
+}
+@layer components {
+ .btn { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-transform duration-200 hover:-translate-y-0.5 active:scale-[.98] disabled:hover:translate-y-0; }
+ .btn-primary { @apply btn bg-primary text-ink hover:bg-primary/90; }
+ .btn-secondary { @apply btn border border-line bg-paper text-ink hover:bg-cream; }
+ .btn-dark { @apply btn bg-ink text-paper hover:bg-ink/90; }
+ .panel { @apply rounded-card border border-line bg-paper p-6 shadow-soft; }
+ .eyebrow { @apply text-xs font-semibold tracking-[.16em] uppercase text-muted; }
+ .field-error { @apply text-sm text-danger mt-2; }
+ .page-title { @apply text-3xl md:text-4xl font-semibold tracking-tight; }
+ .skeleton { @apply bg-line rounded-xl; }
+}
+@keyframes arrive { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.page-enter { animation:arrive 240ms ease-out; }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }

@@ -1,0 +1,4 @@
+import {useEffect,useRef,type ReactNode} from 'react';
+import {X} from 'lucide-react';
+interface Props {open:boolean;onClose:()=>void;title:string;children:ReactNode;}
+export default function Modal({open,onClose,title,children}:Props){const ref=useRef<HTMLDialogElement>(null);useEffect(()=>{if(open&&!ref.current?.open)ref.current?.showModal();if(!open&&ref.current?.open)ref.current?.close();},[open]);return <dialog ref={ref} onCancel={onClose} onClose={onClose} aria-labelledby="modal-title" className="rounded-3xl p-0 w-[calc(100%_-_32px)] max-w-lg bg-paper text-ink backdrop:bg-ink/50 shadow-soft"><div className="p-6"><div className="flex items-center justify-between mb-6"><h2 id="modal-title" className="text-xl font-semibold">{title}</h2><button type="button" onClick={onClose} aria-label="Fechar" className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-cream"><X size={22}/></button></div>{children}</div></dialog>;}

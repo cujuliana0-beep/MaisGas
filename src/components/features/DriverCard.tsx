@@ -1,0 +1,5 @@
+import {Phone,Star,ShieldCheck} from 'lucide-react';
+import photo from '@/assets/driver.webp';
+import type {Driver} from '@/types';
+interface Props {driver:Driver;}
+export default function DriverCard({driver}:Props){return <div className="panel"><span className="eyebrow">O seu entregador</span><div className="flex gap-4 items-center mt-4"><img src={photo} alt={driver.name} className="w-16 h-16 rounded-2xl object-cover"/><div><h2 className="font-heading font-semibold text-lg">{driver.name}</h2><p className="flex gap-1.5 items-center text-sm mt-1"><Star size={15} fill="currentColor"/>{String(driver.rating).replace('.',',')} <span className="text-muted">· {driver.plate}</span></p><span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-2"><ShieldCheck size={14}/> Verificado</span></div></div><a href={`tel:+244${driver.phone}`} className="btn-secondary w-full mt-5"><Phone size={18}/> Ligar ao entregador</a><p className="text-xs text-muted mt-3">Perfil e telefone de demonstração.</p></div>;}

@@ -1,0 +1,23 @@
+import {lazy,Suspense} from 'react';
+import {BrowserRouter,Routes,Route} from 'react-router-dom';
+import {Toaster} from 'sonner';
+import Header from '@/components/layout/Header';
+import Protected from '@/components/features/Protected';
+import PageState from '@/components/features/PageState';
+import {AppProvider} from '@/hooks/useApp';
+const Welcome=lazy(()=>import('@/pages/Welcome'));
+const Onboarding=lazy(()=>import('@/pages/Onboarding'));
+const Login=lazy(()=>import('@/pages/Login'));
+const CustomerHome=lazy(()=>import('@/pages/CustomerHome'));
+const NewOrder=lazy(()=>import('@/pages/NewOrder'));
+const Payment=lazy(()=>import('@/pages/Payment'));
+const Tracking=lazy(()=>import('@/pages/Tracking'));
+const History=lazy(()=>import('@/pages/History'));
+const Addresses=lazy(()=>import('@/pages/Addresses'));
+const Profile=lazy(()=>import('@/pages/Profile'));
+const Help=lazy(()=>import('@/pages/Help'));
+const DriverHome=lazy(()=>import('@/pages/DriverHome'));
+const DriverRegistration=lazy(()=>import('@/pages/DriverRegistration'));
+const Earnings=lazy(()=>import('@/pages/Earnings'));
+const NotFound=lazy(()=>import('@/pages/NotFound'));
+export default function App(){return <AppProvider><BrowserRouter><Header/><div className="bg-paper/60 border-b border-line text-muted text-[10px] text-center py-1.5 px-4 tracking-wide">DEMONSTRAÇÃO · Pedidos, preços, SMS e pagamentos simulados.</div><Suspense fallback={<main className="max-w-6xl mx-auto p-8"><PageState loading/></main>}><Routes><Route path="/" element={<Welcome/>}/><Route path="/onboarding/:role" element={<Onboarding/>}/><Route path="/login/:role" element={<Login/>}/><Route path="/customer" element={<Protected role="customer"><CustomerHome/></Protected>}/><Route path="/customer/order" element={<Protected role="customer"><NewOrder/></Protected>}/><Route path="/customer/payment/:id" element={<Protected role="customer"><Payment/></Protected>}/><Route path="/customer/tracking/:id" element={<Protected role="customer"><Tracking/></Protected>}/><Route path="/history" element={<Protected><History/></Protected>}/><Route path="/addresses" element={<Protected role="customer"><Addresses/></Protected>}/><Route path="/profile" element={<Protected><Profile/></Protected>}/><Route path="/help" element={<Help/>}/><Route path="/driver/register" element={<DriverRegistration/>}/><Route path="/driver" element={<Protected role="driver"><DriverHome/></Protected>}/><Route path="/driver/earnings" element={<Protected role="driver"><Earnings/></Protected>}/><Route path="*" element={<NotFound/>}/></Routes></Suspense><Toaster richColors position="top-center" closeButton/></BrowserRouter></AppProvider>;}

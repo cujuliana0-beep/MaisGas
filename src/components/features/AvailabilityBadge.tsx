@@ -1,0 +1,3 @@
+import type {Zone} from '@/types';
+interface Props {availability:Zone['availability'];}
+export default function AvailabilityBadge({availability}:Props){const info={available:{label:'Gás disponível na sua zona',style:'bg-success/10 text-ink',dot:'bg-success'},low:{label:'Pouco gás · pode demorar mais',style:'bg-warning/15 text-ink',dot:'bg-warning'},unavailable:{label:'Sem stock nesta zona',style:'bg-danger/10 text-danger',dot:'bg-danger'}}[availability];return <span className={`inline-flex items-center gap-2.5 rounded-full px-3.5 py-2 text-xs font-semibold ${info.style}`}><span className={`h-2 w-2 rounded-full shrink-0 ${info.dot}`}/>{info.label}</span>;}

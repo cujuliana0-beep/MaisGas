@@ -1,0 +1,6 @@
+import {Link,useLocation} from 'react-router-dom';
+import {ArrowUpRight,Headphones} from 'lucide-react';
+import Logo from '@/components/features/Logo';
+import ZonePicker from '@/components/features/ZonePicker';
+import {useApp} from '@/hooks/useApp';
+export default function Header(){const {user}=useApp();const {pathname}=useLocation();return <header className="border-b border-line bg-cream/95"><div className="mx-auto max-w-[1320px] px-5 md:px-10 h-[88px] flex items-center justify-between gap-6"><Logo/><div className="hidden md:block"><ZonePicker/></div><nav aria-label="Navegação principal" className="flex items-center gap-7"><a href="/#como-funciona" className="hidden lg:flex min-h-12 items-center text-sm font-medium hover:text-ember">Como funciona</a><Link to="/help" className="hidden sm:flex items-center gap-2 text-sm min-h-12 hover:text-ember"><Headphones size={17}/> Ajuda</Link>{pathname==='/'?<Link to="/onboarding/driver" className="btn-secondary !px-4 !text-sm">Sou entregador <ArrowUpRight size={16}/></Link>:<Link to={user?.role==='driver'?'/driver':'/customer'} className="w-12 h-12 bg-ink text-paper rounded-full flex items-center justify-center font-heading font-semibold" aria-label="A minha conta">{user?.name?.split(' ').map(n=>n[0]).slice(0,2).join('')||'MG'}</Link>}</nav></div></header>;}

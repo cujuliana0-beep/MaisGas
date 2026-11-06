@@ -1,0 +1,4 @@
+import {Component,type ReactNode,type ErrorInfo} from 'react';
+interface Props {children:ReactNode;}
+interface State {failed:boolean;}
+export default class ErrorBoundary extends Component<Props,State>{state:State={failed:false};static getDerivedStateFromError(){return {failed:true};}componentDidCatch(error:Error,info:ErrorInfo){console.error('Falha no +Gás',error,info);}render(){if(this.state.failed)return <main className="p-8 max-w-xl mx-auto"><h1 className="text-2xl font-heading font-bold">Vamos tentar novamente</h1><p className="my-4">Não foi possível abrir a aplicação. Pode repor os dados de demonstração e voltar a entrar.</p><button className="btn-primary" onClick={()=>{Object.keys(localStorage).filter(k=>k.startsWith('maisgas:')).forEach(k=>localStorage.removeItem(k));this.setState({failed:false});}}>Repor demonstração</button></main>;return this.props.children;}}

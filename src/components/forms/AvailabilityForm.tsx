@@ -1,0 +1,10 @@
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {toast} from 'sonner';
+import {useApp} from '@/hooks/useApp';
+import type {Zone} from '@/types';
+interface Props {onDone:()=>void;}
+interface Fields {location:string;availability:Zone['availability'];}
+const schema=z.object({location:z.string().min(4,'Indique o nome e a localização do ponto de venda.'),availability:z.enum(['available','low','unavailable'])});
+export default function AvailabilityForm({onDone}:Props){const {driver,zone,setZone,reports,setReports}=useApp();const {register,handleSubmit,formState:{errors}}=useForm<Fields>({resolver:zodResolver(schema),defaultValues:{location:'',availability:'available'}});return <form onSubmit={handleSubmit(v=>{if(driver.approval_status!=='approved'){toast.error('Só entregadores aprovados podem reportar disponibilidade.');return;}setReports([...reports,{...v,id:crypto.randomUUID(),driver_id:driver.id,created_at:new Date().toISOString()}]);setZone({...zone,availability:v.availability});toast.success('Disponibilidade reportada nesta demonstração.');onDone();})}><p className="text-sm text-muted mb-5">Reporte a situação observada num ponto de venda em {zone.name}.</p><label htmlFor="report-location">Nome do local e referência</label><input id="report-location" placeholder="Ponto de venda, rua ou mercado" {...register('location')}/>{errors.location&&<p className="field-error" role="alert">{errors.location.message}</p>}<fieldset className="mt-5"><legend className="font-semibold text-sm mb-3">Disponibilidade de gás</legend>{[{id:'available',label:'Gás disponível'},{id:'low',label:'Pouco gás'},{id:'unavailable',label:'Sem stock'}].map(s=><label key={s.id} className="flex items-center gap-3 min-h-14 border rounded-xl p-4 font-normal cursor-pointer"><input type="radio" value={s.id} {...register('availability')} className="!w-5 !h-5 !min-h-0 accent-ink"/>{s.label}</label>)}</fieldset><button className="btn-primary w-full mt-5">Enviar relatório</button></form>;}

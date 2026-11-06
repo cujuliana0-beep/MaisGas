@@ -1,0 +1,4 @@
+import {MapPin,ChevronDown} from 'lucide-react';
+import {useApp} from '@/hooks/useApp';
+import {ZONES} from '@/constants/data';
+export default function ZonePicker(){const {zone,setZone}=useApp();return <div className="relative flex items-center gap-2 rounded-xl border border-line bg-paper px-3 min-h-12"><MapPin size={18} className="text-ember shrink-0"/><label htmlFor="zone-picker" className="sr-only">Província e zona de entrega</label><select id="zone-picker" value={zone.id} onChange={e=>setZone(ZONES.find(z=>z.id===e.target.value)!)} className="appearance-none border-0 p-0 pr-5 bg-transparent font-medium text-sm cursor-pointer min-h-12"><>{[...new Set(ZONES.map(z=>z.province))].map(p=><optgroup key={p} label={p}>{ZONES.filter(z=>z.province===p).map(z=><option key={z.id} value={z.id}>{z.province} · {z.name}</option>)}</optgroup>)}</></select><ChevronDown size={14} className="pointer-events-none absolute right-3"/></div>;}
