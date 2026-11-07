@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useState,type FormEvent} from 'react';
 import {Link,useNavigate,useParams} from 'react-router-dom';
 import {Mail,ArrowRight,ShieldCheck,LoaderCircle,Smartphone} from 'lucide-react';
 import {toast} from 'sonner';
@@ -52,7 +52,7 @@ export default function Login(){
   return ()=>{active=false;};
  },[navigate,requestedRole,setUser]);
 
- const sendLink=async(event:React.FormEvent<HTMLFormElement>)=>{
+ const sendLink=async(event:FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
   setError('');
   if(!supabase){setError('Supabase não configurado. Adicione VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no Vercel.');return;}
@@ -79,7 +79,7 @@ export default function Login(){
     <input id="email" type="email" autoComplete="email" required placeholder="nome@exemplo.com" value={email} onChange={e=>setEmail(e.target.value)} />
     <button disabled={busy||checking} className="btn-primary w-full mt-6">{busy?<LoaderCircle size={20} className="animate-spin"/>:<>Enviar link de acesso <ArrowRight size={20}/></>}</button>
    </form>}
-   {sent&&<button type="button" disabled={busy} onClick={sendLink as unknown as React.MouseEventHandler<HTMLButtonElement>} className="btn-primary w-full mt-2">Reenviar link</button>}
+   {sent&&<form onSubmit={sendLink}><button type="submit" disabled={busy} className="btn-primary w-full mt-2">{busy?"A enviar…":"Reenviar link"}</button></form>}
    {error&&<p role="alert" className="field-error mt-4">{error}</p>}
    <div className="rounded-xl bg-paper p-4 mt-6 text-xs text-muted leading-relaxed"><p className="flex gap-2"><ShieldCheck size={16} className="shrink-0"/>A autenticação é feita pelo Supabase. O link é enviado por email; confirme também a pasta de spam.</p><p className="flex gap-2 mt-3"><Smartphone size={16} className="shrink-0"/>O acesso por telefone (+244) ficará disponível quando configurarmos um fornecedor SMS. Não é enviado nenhum SMS nesta fase.</p></div>
    {requestedRole==='driver'&&<Link to="/driver/register" className="btn-secondary w-full mt-4">Registar-me como entregador</Link>}
