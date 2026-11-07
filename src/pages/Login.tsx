@@ -1,13 +1,88 @@
-import {useState} from 'react';
-import {useForm} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
+import {useEffect,useState} from 'react';
 import {Link,useNavigate,useParams} from 'react-router-dom';
-import {Smartphone,ArrowRight,ShieldCheck,LoaderCircle} from 'lucide-react';
+import {Mail,ArrowRight,ShieldCheck,LoaderCircle,Smartphone} from 'lucide-react';
 import {toast} from 'sonner';
-import {phoneSchema,codeSchema} from '@/lib/validations';
+import {supabase} from '@/lib/supabase';
 import {useApp} from '@/hooks/useApp';
 import PageLayout from '@/components/layout/PageLayout';
-export default function Login(){const {role}=useParams();const navigate=useNavigate();const {setUser,driver}=useApp();const [sent,setSent]=useState(false);const [phone,setPhone]=useState('');const [busy,setBusy]=useState(false);const phoneForm=useForm<{phone:string}>({resolver:zodResolver(phoneSchema)});const codeForm=useForm<{code:string}>({resolver:zodResolver(codeSchema)});
- const send=({phone}:{phone:string})=>{setBusy(true);setPhone(phone);setTimeout(()=>{setBusy(false);setSent(true);toast.info('SMS simulado. Use o código 123456.');},650);};
- const verify=({code}:{code:string})=>{if(code!=='123456'){codeForm.setError('code',{message:'Código incorrecto. Na demonstração, use 123456.'});return;}setBusy(true);setTimeout(()=>{setUser({id:role==='driver'?driver.id:'customer-demo',name:role==='driver'?driver.name:'Ana Manuel',phone,role:role==='driver'?'driver':'customer'});console.log('Sessão de demonstração iniciada',role);navigate(role==='driver'?'/driver':'/customer');toast.success('Bem-vindo ao +Gás.');},500);};
- return <PageLayout nav={false} back={`/onboarding/${role}`}><div className="max-w-md mx-auto panel md:p-10"><div className="h-16 w-16 bg-primary/15 rounded-2xl flex items-center justify-center mb-6"><Smartphone size={30}/></div><span className="eyebrow">{role==='driver'?'Área do entregador':'Área do cliente'}</span><h1 className="text-3xl font-semibold mt-3">{sent?'O seu código chegou.':'Entre com o seu número.'}</h1><p className="text-muted leading-relaxed mt-4 mb-7">{sent?`Introduza o código enviado para +244 ${phone}.`:'Sem palavras-passe. Só o seu telefone e um código de confirmação.'}</p>{!sent?<form onSubmit={phoneForm.handleSubmit(send)}><label htmlFor="phone">Número de telefone</label><div className="flex items-center border rounded-xl overflow-hidden"><span className="pl-4 text-muted">+244</span><input id="phone" inputMode="tel" autoComplete="tel-national" placeholder="923 456 789" maxLength={9} {...phoneForm.register('phone')} className="border-0"/></div>{phoneForm.formState.errors.phone&&<p role="alert" className="field-error">⚠ {phoneForm.formState.errors.phone.message}</p>}<button disabled={busy} className="btn-primary w-full mt-6">{busy?<LoaderCircle size={20}/>:<>Receber código <ArrowRight size={20}/></>}</button></form>:<form onSubmit={codeForm.handleSubmit(verify)}><label htmlFor="sms">Código SMS · 6 dígitos</label><input id="sms" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="123456" className="text-center text-2xl tracking-[.3em]" {...codeForm.register('code')}/>{codeForm.formState.errors.code&&<p role="alert" className="field-error">⚠ {codeForm.formState.errors.code.message}</p>}<p className="text-xs text-muted mt-3">Demonstração: use 123456. Não foi enviado nenhum SMS.</p><button disabled={busy} className="btn-primary w-full mt-6">{busy?'A entrar…':'Entrar no +Gás'}<ArrowRight size={20}/></button><button type="button" onClick={()=>{setSent(false);setBusy(false);}} className="w-full min-h-12 mt-2 text-sm text-muted">Alterar número / reenviar código</button></form>}{role==='driver'&&<Link to="/driver/register" className="btn-secondary w-full mt-4">Registar-me como entregador</Link>}<p className="flex gap-2 text-xs text-muted leading-relaxed mt-6"><ShieldCheck size={16} className="shrink-0"/>Os seus dados ficam apenas neste dispositivo durante a demonstração.</p></div></PageLayout>;}
+
+export default function Login(){
+ const {role}=useParams();
+ const requestedRole=role==='driver'?'driver':'customer';
+ const navigate=useNavigate();
+ const {setUser}=useApp();
+ const [email,setEmail]=useState('');
+ const [busy,setBusy]=useState(false);
+ const [sent,setSent]=useState(false);
+ const [checking,setChecking]=useState(true);
+ const [error,setError]=useState('');
+
+ useEffect(()=>{
+  let active=true;
+  const finishSignIn=async()=>{
+   if(!supabase){if(active){setError('O Supabase ainda não está configurado. Verifique as variáveis de ambiente no Vercel.');setChecking(false);}return;}
+   const {data:{session},error:sessionError}=await supabase.auth.getSession();
+   if(!active)return;
+   if(sessionError){setError(sessionError.message);setChecking(false);return;}
+   if(!session){setChecking(false);return;}
+   const authUser=session.user;
+   const {data:profile,error:profileError}=await supabase.from('profiles').select('id,name,phone,role').eq('id',authUser.id).maybeSingle();
+   if(!active)return;
+   if(profileError){setError('A sessão foi iniciada, mas não foi possível consultar o perfil. Verifique as permissões RLS da tabela profiles.');setChecking(false);return;}
+   if(!profile && requestedRole==='customer'){
+    const name=String(authUser.user_metadata?.full_name||authUser.email?.split('@')[0]||'Cliente');
+    const {data:created,error:createError}=await supabase.from('profiles').insert({id:authUser.id,name,role:'customer'}).select('id,name,phone,role').single();
+    if(!active)return;
+    if(createError||!created){setError('A conta foi autenticada, mas o perfil de cliente não pôde ser criado. Verifique a política INSERT de profiles no Supabase.');setChecking(false);return;}
+    setUser({id:created.id,name:created.name,phone:created.phone||'',role:'customer'});
+    navigate('/customer',{replace:true});
+    return;
+   }
+   if(!profile){setError('Não existe um perfil de entregador associado a este email. Registe-se e aguarde a aprovação.');setChecking(false);return;}
+   if(profile.role!==requestedRole){setError(profile.role==='driver'?'Esta conta pertence à área do entregador.':'Esta conta pertence à área do cliente.');setChecking(false);return;}
+   if(profile.role==='driver'){
+    const {data:driver,error:driverError}=await supabase.from('drivers').select('approval_status').eq('id',authUser.id).maybeSingle();
+    if(!active)return;
+    if(driverError||!driver||driver.approval_status!=='approved'){setError('O acesso de entregador só fica disponível depois da aprovação do registo.');setChecking(false);return;}
+   }
+   setUser({id:profile.id,name:profile.name||authUser.email||'Utilizador',phone:profile.phone||'',role:profile.role});
+   navigate(profile.role==='driver'?'/driver':'/customer',{replace:true});
+  };
+  void finishSignIn();
+  return ()=>{active=false;};
+ },[navigate,requestedRole,setUser]);
+
+ const sendLink=async(event:React.FormEvent<HTMLFormElement>)=>{
+  event.preventDefault();
+  setError('');
+  if(!supabase){setError('Supabase não configurado. Adicione VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no Vercel.');return;}
+  setBusy(true);
+  const {error:authError}=await supabase.auth.signInWithOtp({
+   email:email.trim().toLowerCase(),
+   options:{emailRedirectTo:`${window.location.origin}/login/${requestedRole}`,data:{full_name:email.trim().split('@')[0]}}
+  });
+  setBusy(false);
+  if(authError){setError(authError.message);return;}
+  setSent(true);
+  toast.success('Enviámos um link de acesso para o seu email.');
+ };
+
+ return <PageLayout nav={false} back={`/onboarding/${requestedRole}`}>
+  <div className="max-w-md mx-auto panel md:p-10">
+   <div className="h-16 w-16 bg-primary/15 rounded-2xl flex items-center justify-center mb-6"><Mail size={30}/></div>
+   <span className="eyebrow">{requestedRole==='driver'?'Área do entregador':'Área do cliente'}</span>
+   <h1 className="text-3xl font-semibold mt-3">{sent?'Consulte o seu email.':'Entre com o seu email.'}</h1>
+   <p className="text-muted leading-relaxed mt-4 mb-7">{sent?`Enviámos um link de acesso para ${email}. Abra a mensagem neste dispositivo para continuar.`:'Vamos enviar-lhe um link seguro para entrar no +Gás. Não precisa de palavra-passe nem de SMS.'}</p>
+   {checking&&<p className="text-sm text-muted flex items-center gap-2 mb-5"><LoaderCircle size={16} className="animate-spin"/>A verificar a sua sessão…</p>}
+   {!sent&&<form onSubmit={sendLink}>
+    <label htmlFor="email">Endereço de email</label>
+    <input id="email" type="email" autoComplete="email" required placeholder="nome@exemplo.com" value={email} onChange={e=>setEmail(e.target.value)} />
+    <button disabled={busy||checking} className="btn-primary w-full mt-6">{busy?<LoaderCircle size={20} className="animate-spin"/>:<>Enviar link de acesso <ArrowRight size={20}/></>}</button>
+   </form>}
+   {sent&&<button type="button" disabled={busy} onClick={sendLink as unknown as React.MouseEventHandler<HTMLButtonElement>} className="btn-primary w-full mt-2">Reenviar link</button>}
+   {error&&<p role="alert" className="field-error mt-4">{error}</p>}
+   <div className="rounded-xl bg-paper p-4 mt-6 text-xs text-muted leading-relaxed"><p className="flex gap-2"><ShieldCheck size={16} className="shrink-0"/>A autenticação é feita pelo Supabase. O link é enviado por email; confirme também a pasta de spam.</p><p className="flex gap-2 mt-3"><Smartphone size={16} className="shrink-0"/>O acesso por telefone (+244) ficará disponível quando configurarmos um fornecedor SMS. Não é enviado nenhum SMS nesta fase.</p></div>
+   {requestedRole==='driver'&&<Link to="/driver/register" className="btn-secondary w-full mt-4">Registar-me como entregador</Link>}
+  </div>
+ </PageLayout>;
+}
